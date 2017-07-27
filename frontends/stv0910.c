@@ -1797,6 +1797,42 @@ static int read_ucblocks(struct dvb_frontend *fe, u32 *ucblocks)
 	return 0;
 }
 
+static int get_property(struct dvb_frontend *fe, struct dtv_property *tvp)
+{
+	struct stv *state = fe->demodulator_priv;
+
+	switch (tvp->cmd) {
+		case DTV_FREQUENCY: {
+			u32 freq;
+			s32 foff;
+			if (fe->ops.tuner_ops.get_frequency)
+				fe->ops.tuner_ops.get_frequency(fe, &freq);
+			else
+				break;
+			get_frequency_offset(state, &foff);
+			tvp->u.data = freq + (foff / 1000);
+
+			break;
+		}
+		case DTV_SYMBOL_RATE: {
+			u32 symbol_rate;
+			get_cur_symbol_rate(state, &symbol_rate);
+			tvp->u.data = symbol_rate;
+
+			break;
+		}
+		case DTV_DELIVERY_SYSTEM: {
+			tvp->u.data = state->receive_mode ==
+				RCVMODE_DVBS2 ? SYS_DVBS2 : SYS_DVBS;
+			break;
+		}
+		default:
+		    break;
+	}
+
+	return 0;
+}
+
 static struct dvb_frontend_ops stv0910_ops = {
 	.delsys = { SYS_DVBS, SYS_DVBS2, SYS_DSS },
 	.info = {
@@ -1831,6 +1867,8 @@ static struct dvb_frontend_ops stv0910_ops = {
 	.read_ber			= read_ber,
 	.read_signal_strength		= read_signal_strength,
 	.read_ucblocks			= read_ucblocks,
+
+	.get_property			= get_property,
 };
 
 static struct stv_base *match_base(struct i2c_adapter *i2c, u8 adr)
