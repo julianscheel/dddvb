@@ -171,10 +171,15 @@ static int dvb_dvr_open(struct inode *inode, struct file *file)
 			mutex_unlock(&dmxdev->mutex);
 			return -ENOMEM;
 		}
-		dvb_ringbuffer_init(&dmxdev->dvr_buffer, mem, DVR_BUFFER_SIZE);
+		dmxdev->dvr_buffer.data = mem;
+		dmxdev->dvr_buffer.size = DVR_BUFFER_SIZE;
+		dvb_ringbuffer_reset(&dmxdev->dvr_buffer);
 #ifdef CONFIG_DVB_MMAP
 		if (dmxdev->may_do_mmap)
 			dvb_vb2_init(&dmxdev->dvr_vb2_ctx, "dvr",
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7,0,0))
+				     &dmxdev->mutex,
+#endif
 				     file->f_flags & O_NONBLOCK);
 #endif
 		dvbdev->readers--;
@@ -447,11 +452,19 @@ static int dvb_dmxdev_section_callback(const u8 *buffer1, size_t buffer1_len,
 	if (dvb_vb2_is_streaming(&dmxdevfilter->vb2_ctx)) {
 		ret = dvb_vb2_fill_buffer(&dmxdevfilter->vb2_ctx,
 					  buffer1, buffer1_len,
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(7,0,0))
 					  buffer_flags);
+#else
+					  buffer_flags, true);
+#endif
 		if (ret == buffer1_len)
 			ret = dvb_vb2_fill_buffer(&dmxdevfilter->vb2_ctx,
 						  buffer2, buffer2_len,
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(7,0,0))
 						  buffer_flags);
+#else
+		                                  buffer_flags, true);
+#endif
 	} else {
 		ret = dvb_dmxdev_buffer_write(&dmxdevfilter->buffer,
 					      buffer1, buffer1_len);
@@ -510,11 +523,19 @@ static int dvb_dmxdev_ts_callback(const u8 *buffer1, size_t buffer1_len,
 
 #ifdef CONFIG_DVB_MMAP
 	if (dvb_vb2_is_streaming(ctx)) {
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(7,0,0))
 		ret = dvb_vb2_fill_buffer(ctx, buffer1, buffer1_len,
 					  buffer_flags);
 		if (ret == buffer1_len)
 			ret = dvb_vb2_fill_buffer(ctx, buffer2, buffer2_len,
 						  buffer_flags);
+#else
+		ret = dvb_vb2_fill_buffer(ctx, buffer1, buffer1_len,
+					  buffer_flags, false);
+		if (ret == buffer1_len)
+			ret = dvb_vb2_fill_buffer(ctx, buffer2, buffer2_len,
+						  buffer_flags, false);
+#endif
 	} else {
 #endif
 		if (buffer->error) {
@@ -799,7 +820,6 @@ static int dvb_dmxdev_filter_start(struct dmxdev_filter *filter)
 		if (ret < 0) {
 			dvb_dmxdev_feed_restart(filter);
 			*secfeed = NULL;
-			//filter->feed.sec->start_filtering(*secfeed);
 			dprintk("could not get filter\n");
 			return ret;
 		}
@@ -885,6 +905,9 @@ static int dvb_demux_open(struct inode *inode, struct file *file)
 	dvb_ringbuffer_init(&dmxdevfilter->buffer, NULL, 8192);
 #ifdef CONFIG_DVB_MMAP
 	dvb_vb2_init(&dmxdevfilter->vb2_ctx, "demux_filter",
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7,0,0))
+		     &dmxdev->mutex,
+#endif
 		     file->f_flags & O_NONBLOCK);
 #endif
 	dmxdevfilter->type = DMXDEV_TYPE_NONE;

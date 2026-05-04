@@ -96,7 +96,9 @@ struct dvb_buffer {
  */
 struct dvb_vb2_ctx {
 	struct vb2_queue	vb_q;
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(7,0,0))
 	struct mutex		mutex;
+#endif
 	spinlock_t		slock;
 	struct list_head	dvb_q;
 	struct dvb_buffer	*buf;
@@ -114,8 +116,13 @@ struct dvb_vb2_ctx {
 };
 
 #ifndef CONFIG_DVB_MMAP
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(7,0,0))
 static inline int dvb_vb2_init(struct dvb_vb2_ctx *ctx,
 			       const char *name, int non_blocking)
+#else
+static inline int dvb_vb2_init(struct dvb_vb2_ctx *ctx, const char *name,
+			       struct mutex *mutex, int non_blocking)
+#endif
 {
 	return 0;
 };
@@ -138,11 +145,16 @@ static inline __poll_t dvb_vb2_poll(struct dvb_vb2_ctx *ctx,
  *
  * @ctx:	control struct for VB2 handler
  * @name:	name for the VB2 handler
+ * @mutex:	pointer to the mutex that serializes vb2 ioctls
  * @non_blocking:
  *		if not zero, it means that the device is at non-blocking mode
  */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(7,0,0))
 int dvb_vb2_init(struct dvb_vb2_ctx *ctx, const char *name, int non_blocking);
-
+#else
+int dvb_vb2_init(struct dvb_vb2_ctx *ctx, const char *name,
+		 struct mutex *mutex, int non_blocking);
+#endif
 /**
  * dvb_vb2_release - Releases the VB2 handler allocated resources and
  *	put @ctx at DVB_VB2_STATE_NONE state.
@@ -167,9 +179,16 @@ int dvb_vb2_is_streaming(struct dvb_vb2_ctx *ctx);
  *		pointer to buffer flags as defined by &enum dmx_buffer_flags.
  *		can be NULL.
  */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(7,0,0))
 int dvb_vb2_fill_buffer(struct dvb_vb2_ctx *ctx,
 			const unsigned char *src, int len,
 			enum dmx_buffer_flags *buffer_flags);
+#else
+int dvb_vb2_fill_buffer(struct dvb_vb2_ctx *ctx,
+			const unsigned char *src, int len,
+			enum dmx_buffer_flags *buffer_flags,
+			bool flush);
+#endif
 
 /**
  * dvb_vb2_poll - Wrapper to vb2_core_streamon() for Digital TV
