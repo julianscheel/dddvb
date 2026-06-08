@@ -66,7 +66,7 @@ static void ns_free(struct dvbnss *nss)
 	struct ddb *dev = input->port->dev;
 
 	mutex_lock(&dev->mutex);
-	dns->input = 0;
+	dns->input = NULL;
 	mutex_unlock(&dev->mutex);
 }
 
@@ -258,7 +258,8 @@ static int ns_set_rtcp_msg(struct dvbnss *nss, u8 *msg, u32 len)
 			  STREAM_CONTROL(dns->nr));
 		return 0;
 	}
-	if (copy_from_user(dns->p + coff + dns->rtcp_len, msg, len))
+	if (copy_from_user(dns->p + coff + dns->rtcp_len,
+			   (void __user *) msg, len))
 		return -EFAULT;
 	dns->p[coff + dns->rtcp_len - 2] = (len >> 8);
 	dns->p[coff + dns->rtcp_len - 1] = (len & 0xff);
@@ -380,7 +381,8 @@ static int ns_set_ts_packets(struct dvbnss *nss, u8 *buf, u32 len)
 	if (nss->params.flags & DVB_NS_RTCP)
 		return -EINVAL;
 
-	if (copy_from_user(dns->p + dns->ts_offset, buf, len))
+	if (copy_from_user(dns->p + dns->ts_offset,
+			   (void __user *) buf, len))
 		return -EFAULT;
 	ddbcpyto(dev, off, dns->p, sizeof(dns->p));
 	return 0;

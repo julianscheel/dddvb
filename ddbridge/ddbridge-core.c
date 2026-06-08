@@ -27,7 +27,7 @@
 #include "ddbridge-ioctl.h"
 #include <media/dvb_net.h>
 
-struct workqueue_struct *ddb_wq;
+static struct workqueue_struct *ddb_wq;
 
 static DEFINE_MUTEX(redirect_lock); /* lock for redirect */
 
@@ -98,7 +98,7 @@ int ddb_dvb_usercopy(struct file *file,
 		     int (*func)(struct file *file,
 				 unsigned int cmd, void *arg))
 {
-	char    sbuf[128];
+	char    sbuf[128] =  {};
 	void    *mbuf = NULL;
 	void    *parg = NULL;
 	int     err  = -EINVAL;
@@ -126,21 +126,21 @@ int ddb_dvb_usercopy(struct file *file,
 		}
 
 		err = -EFAULT;
-		if (copy_from_user(parg, (void __user *)arg, _IOC_SIZE(cmd)))
+		if (copy_from_user(parg, (void __user *) arg, _IOC_SIZE(cmd)))
 			goto out;
 		break;
 	}
-
+	
 	/* call driver */
-	if ((err = func(file, cmd, parg)) == -ENOIOCTLCMD)
+        err = func(file, cmd, parg);
+	if (err == -ENOIOCTLCMD)
 		err = -ENOTTY;
 
 	if (err < 0)
 		goto out;
 
 	/*  Copy results into user buffer  */
-	switch (_IOC_DIR(cmd))
-	{
+	switch (_IOC_DIR(cmd)) {
 	case _IOC_READ:
 	case (_IOC_WRITE | _IOC_READ):
 		if (copy_to_user((void __user *)arg, parg, _IOC_SIZE(cmd)))
@@ -909,7 +909,7 @@ static size_t ddb_input_read(struct ddb_input *input,
 /****************************************************************************/
 /****************************************************************************/
 
-static ssize_t ts_write(struct file *file, const char *buf,
+static ssize_t ts_write(struct file *file, const char __user *buf,
 			size_t count, loff_t *ppos)
 {
 	struct dvb_device *dvbdev = file->private_data;
@@ -970,23 +970,23 @@ static ssize_t ts_read(struct file *file, __user char *buf,
 	return (count && (left == count)) ? -EAGAIN : (count - left);
 }
 
-static unsigned int ts_poll(struct file *file, poll_table *wait)
+static __poll_t ts_poll(struct file *file, poll_table *wait)
 {
 	struct dvb_device *dvbdev = file->private_data;
 	struct ddb_output *output = dvbdev->priv;
 	struct ddb_input *input = output->port->input[0];
 
-	unsigned int mask = 0;
+	__poll_t mask = 0;
 
 	if (input && input->dma) {
 		poll_wait(file, &input->dma->wq, wait);
 		if (ddb_input_avail(input) >= 188)
-			mask |= POLLIN | POLLRDNORM;
+			mask |= EPOLLIN | EPOLLRDNORM;
 	}
 	if (output && output->dma) {
 		poll_wait(file, &output->dma->wq, wait);
 		if (ddb_output_free(output) >= 188)
-			mask |= POLLOUT | POLLWRNORM;
+			mask |= EPOLLOUT | EPOLLWRNORM;
 	}
 	return mask;
 }
@@ -1598,7 +1598,7 @@ static int dvb_register_adapters(struct ddb *dev)
 {
 	int i, ret = 0, l = 0;
 	struct ddb_port *port;
-	struct dvb_adapter *adap = 0;
+	struct dvb_adapter *adap = NULL;
 
 	if (adapter_alloc == 4) {
 		for (i = 0; i < dev->port_num; i++) {
@@ -2915,13 +2915,13 @@ irqreturn_t ddb_irq_handler_v2(int irq, void *dev_id)
 /****************************************************************************/
 /****************************************************************************/
 
-static ssize_t nsd_read(struct file *file, char *buf,
+static ssize_t nsd_read(struct file *file, __user char *buf,
 			size_t count, loff_t *ppos)
 {
 	return 0;
 }
 
-static unsigned int nsd_poll(struct file *file, poll_table *wait)
+static __poll_t nsd_poll(struct file *file, poll_table *wait)
 {
 	return 0;
 }
@@ -2949,7 +2949,7 @@ static struct ddb_input *plugtoinput(struct ddb *dev, u8 plug)
 			j += 2;
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 static int nsd_do_ioctl(struct file *file, unsigned int cmd, void *parg)
@@ -3012,7 +3012,7 @@ static int nsd_do_ioctl(struct file *file, unsigned int cmd, void *parg)
 		ddbcpyfrom(dev, dev->tsbuf, TS_CAPTURE_MEMORY,
 			   TS_CAPTURE_LEN);
 		ts->len = ddbreadl(dev, TS_CAPTURE_RECEIVED) & 0x1fff;
-		if (copy_to_user(ts->ts, dev->tsbuf, ts->len))
+		if (copy_to_user((void __user *) ts->ts, dev->tsbuf, ts->len))
 			return -EIO;
 		break;
 	}
@@ -3063,7 +3063,7 @@ static const struct file_operations nsd_fops = {
 };
 
 static struct dvb_device dvbdev_nsd = {
-	.priv    = 0,
+	.priv    = NULL,
 	.readers = 1,
 	.writers = 1,
 	.users   = 1,
@@ -3251,7 +3251,7 @@ static int ddb_open(struct inode *inode, struct file *file)
 static long ddb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	struct ddb *dev = file->private_data;
-	void *parg = (void *)arg;
+	void __user *parg = (void __user *)arg;
 	int res;
 
 	switch (cmd) {
@@ -3272,13 +3272,13 @@ static long ddb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		wbuf = &dev->iobuf[0];
 		rbuf = wbuf + fio.write_len;
 
-		if (copy_from_user(wbuf, fio.write_buf, fio.write_len))
+		if (copy_from_user(wbuf, (void __user *) fio.write_buf, fio.write_len))
 			return -EFAULT;
 		res = flashio(dev, fio.link, wbuf,
 			      fio.write_len, rbuf, fio.read_len);
 		if (res)
 			return res;
-		if (copy_to_user(fio.read_buf, rbuf, fio.read_len))
+		if (copy_to_user((void __user *) fio.read_buf, rbuf, fio.read_len))
 			return -EFAULT;
 		break;
 	}
@@ -3371,7 +3371,7 @@ static long ddb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		    mem.len > 1024)
 			return -EINVAL;
 		ddbcpyfrom(dev, buf, mem.off, mem.len);
-		if (copy_to_user(mem.buf, buf, mem.len))
+		if (copy_to_user((void __user *) mem.buf, buf, mem.len))
 			return -EFAULT;
 		break;
 	}
@@ -3385,7 +3385,7 @@ static long ddb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		if ((((mem.len + mem.off) & 0xfffffff) > dev->regs_len) ||
 		    mem.len > 1024)
 			return -EINVAL;
-		if (copy_from_user(buf, mem.buf, mem.len))
+		if (copy_from_user(buf, (void __user *) mem.buf, mem.len))
 			return -EFAULT;
 		ddbcpyto(dev, mem.off, buf, mem.len);
 		break;
@@ -3406,11 +3406,11 @@ static long ddb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		adap = &dev->i2c[i2c.bus].adap;
 		mbuf = hbuf + i2c.hlen;
 
-		if (copy_from_user(hbuf, i2c.hdr, i2c.hlen))
+		if (copy_from_user(hbuf, (void __user *) i2c.hdr, i2c.hlen))
 			return -EFAULT;
 		if (i2c_io(adap, i2c.adr, hbuf, i2c.hlen, mbuf, i2c.mlen) < 0)
 			return -EIO;
-		if (copy_to_user(i2c.msg, mbuf, i2c.mlen))
+		if (copy_to_user((void __user *) i2c.msg, mbuf, i2c.mlen))
 			return -EFAULT;
 		break;
 	}
@@ -3428,9 +3428,9 @@ static long ddb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			return -EINVAL;
 
 		adap = &dev->i2c[i2c.bus].adap;
-		if (copy_from_user(buf, i2c.hdr, i2c.hlen))
+		if (copy_from_user(buf, (void __user *) i2c.hdr, i2c.hlen))
 			return -EFAULT;
-		if (copy_from_user(buf + i2c.hlen, i2c.msg, i2c.mlen))
+		if (copy_from_user(buf + i2c.hlen, (void __user *) i2c.msg, i2c.mlen))
 			return -EFAULT;
 		if (i2c_write(adap, i2c.adr, buf, i2c.hlen + i2c.mlen) < 0)
 			return -EIO;

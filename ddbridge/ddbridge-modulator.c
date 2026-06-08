@@ -233,7 +233,7 @@ static int mod_set_stream(struct ddb_output *output)
 	cmd.mod_channel = channel;
 	cmd.mod_setup_stream.symbol_rate = mod->symbolrate;
 	cmd.mod_setup_stream.qam.modulation = mod->modulation - 1;
-	return ddb_mci_cmd_link(link, &cmd, 0);
+	return ddb_mci_cmd_link(link, &cmd, NULL);
 }
 
 static int mod_set_symbolrate(struct ddb_mod *mod, u32 srate)
@@ -594,7 +594,7 @@ static int mod_set_power(struct ddb *dev)
 		return -EFAULT;
 	cmd.mod_setup_output.channel_power =
 		8232 - base->attenuation * 1000 + base->gain * 12;
-	return ddb_mci_cmd_link(link, &cmd, 0);
+	return ddb_mci_cmd_link(link, &cmd, NULL);
 }
 
 static int mod_set_vga(struct ddb *dev, u32 gain)
@@ -1614,7 +1614,7 @@ static int mod_set_ari(struct ddb_mod *mod, u32 rate)
 		.params[1] = rate,
 	};
 	printk("ari: %u %04x\n", stream, rate);
-	return ddb_mci_cmd_link(link, &cmd, 0);
+	return ddb_mci_cmd_link(link, &cmd, NULL);
 }
 
 static int mod3_set_ari(struct ddb_mod *mod, u32 rate)
@@ -1869,8 +1869,7 @@ int ddbridge_mod_do_ioctl(struct file *file, unsigned int cmd, void *parg)
 	struct ddb *dev = output->port->dev;
 	struct ddb_mod *mod = &dev->mod[output->nr];
 	struct dtv_property *tvp = NULL;
-	struct dtv_properties *tvps =
-		(struct dtv_properties __user *) parg;
+	struct dtv_properties *tvps = parg;
 	int i, ret = 0;
 
 	if (dev->link[0].info->version >= 16 &&
@@ -1883,7 +1882,7 @@ int ddbridge_mod_do_ioctl(struct file *file, unsigned int cmd, void *parg)
 			ret = -EINVAL;
 			break;
 		}
-		tvp = memdup_user(tvps->props, tvps->num * sizeof(*tvp));
+		tvp = memdup_user((void __user *) tvps->props, tvps->num * sizeof(*tvp));
 		if (IS_ERR(tvp)) {
 			ret = PTR_ERR(tvp);
 			break;
@@ -1902,7 +1901,7 @@ int ddbridge_mod_do_ioctl(struct file *file, unsigned int cmd, void *parg)
 			ret = -EINVAL;
 			break;
 		}
-		tvp = memdup_user(tvps->props, tvps->num * sizeof(*tvp));
+		tvp = memdup_user((void __user *) tvps->props, tvps->num * sizeof(*tvp));
 		if (IS_ERR(tvp)) {
 			ret = PTR_ERR(tvp);
 			break;
@@ -1914,7 +1913,7 @@ int ddbridge_mod_do_ioctl(struct file *file, unsigned int cmd, void *parg)
 			(tvp + i)->result = ret;
 		}
 		if ((ret >= 0) &&
-		    copy_to_user((void __user *)tvps->props, tvp,
+		    copy_to_user((void __user *) tvps->props, tvp,
 				 tvps->num * sizeof(struct dtv_property)))
 			ret = -EFAULT;
 		kfree(tvp);
@@ -1968,8 +1967,7 @@ int ddbridge_mod_do_ioctl(struct file *file, unsigned int cmd, void *parg)
 	}
 	case IOCTL_DDB_MCI_CMD:
 	{
-		struct ddb_mci_msg *msg = 
-			(struct ddb_mci_msg __user *) parg;
+		struct ddb_mci_msg *msg = parg;
 		struct ddb_link *link;
 
 		if (dev->link[0].ids.revision != 1) {

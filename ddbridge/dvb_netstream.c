@@ -29,21 +29,21 @@
 int ddb_dvb_usercopy(struct file *file, unsigned int cmd, unsigned long arg,
 		     int (*func)(struct file *file, unsigned int cmd, void *arg));
 
-static ssize_t ns_write(struct file *file, const char *buf,
+static ssize_t ns_write(struct file *file, const char __user *buf,
 			size_t count, loff_t *ppos)
 {
 	pr_info("%s\n", __func__);
 	return 0;
 }
 
-static ssize_t ns_read(struct file *file, char *buf,
+static ssize_t ns_read(struct file *file, __user char *buf,
 		       size_t count, loff_t *ppos)
 {
 	pr_info("%s\n", __func__);
 	return 0;
 }
 
-static unsigned int ns_poll(struct file *file, poll_table *wait)
+static __poll_t ns_poll(struct file *file, poll_table *wait)
 {
 	pr_info("%s\n", __func__);
 	return 0;
@@ -186,7 +186,8 @@ static int do_ioctl(struct file *file, unsigned int cmd, void *parg)
 	}
 
 	case NS_SET_PIDS:
-		ret = copy_from_user(nss->pids, *(u8 **) parg, 0x400);
+		ret = copy_from_user(nss->pids,
+				     (void __user *) *(u8 **) parg, 0x400);
 		if (ret < 0)
 			return ret;
 		if (ns->set_pids)
@@ -224,12 +225,12 @@ static const struct file_operations ns_fops = {
 	.open    = ns_open,
 	.release = ns_release,
 	.poll    = ns_poll,
-	.mmap    = 0,
+	.mmap    = NULL,
 	.unlocked_ioctl = ns_ioctl,
 };
 
 static struct dvb_device ns_dev = {
-	.priv    = 0,
+	.priv    = NULL,
 	.readers = 1,
 	.writers = 1,
 	.users   = 1,

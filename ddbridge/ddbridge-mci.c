@@ -489,7 +489,7 @@ static struct mci_base *match_base(void *key)
 	return NULL;
 }
 
-enum fe_delivery_system todelsys[16] = {
+static enum fe_delivery_system todelsys[16] = {
 	SYS_DVBS, SYS_DVBS2, SYS_DVBS2, SYS_DVBC_ANNEX_A,
 	SYS_DVBT, SYS_DVBT2, SYS_DVBC2, SYS_DVBC_ANNEX_B,
 	SYS_ISDBT, SYS_ISDBC, SYS_ISDBS, SYS_ISDBS3,

@@ -1024,7 +1024,7 @@ static int HI_CfgCommand(struct drxk_state *state)
 				    state->m_HICfgTimingDiv));
 		CHK_ERROR(Write16_0(state,SIO_HI_RA_RAM_PAR_1__A, 
 				    SIO_HI_RA_RAM_PAR_1_PAR1_SEC_KEY));
-		CHK_ERROR(HI_Command(state, SIO_HI_RA_RAM_CMD_CONFIG, 0));
+		CHK_ERROR(HI_Command(state, SIO_HI_RA_RAM_CMD_CONFIG, NULL));
 
 		state->m_HICfgCtrl &= ~SIO_HI_RA_RAM_PAR_5_CFG_SLEEP_ZZZ;
 	} while(0);
@@ -2423,7 +2423,7 @@ static int ConfigureI2CBridge(struct drxk_state *state, bool bEnableBridge)
 					    SIO_HI_RA_RAM_PAR_2_BRD_CFG_OPEN));
 		}
 		
-		CHK_ERROR(HI_Command(state, SIO_HI_RA_RAM_CMD_BRDCTRL,0));
+		CHK_ERROR(HI_Command(state, SIO_HI_RA_RAM_CMD_BRDCTRL, NULL));
 	} while(0);
 	return status;
 }

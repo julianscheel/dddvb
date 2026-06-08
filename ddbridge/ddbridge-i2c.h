@@ -67,7 +67,7 @@ static inline int i2c_read_regs(struct i2c_adapter *adapter,
 static inline int i2c_read_regs16(struct i2c_adapter *adapter,
 				  u8 adr, u16 reg, u8 *val, u8 len)
 {
-	u8 reg16[2] = { reg >> 8, reg };
+	u8 reg16[2] = { reg >> 8, reg & 0xff};
 	struct i2c_msg msgs[2] = {{.addr = adr,  .flags = 0,
 				   .buf  = reg16, .len   = 2 },
 				  {.addr = adr,  .flags = I2C_M_RD,

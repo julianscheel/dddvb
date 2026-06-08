@@ -107,7 +107,7 @@ struct init_table {
 	u8   data;
 };
 
-struct init_table base_init[] = {
+static struct init_table base_init[] = {
 	{ R367_IOCFG0,     0x80 },
 	{ R367_DAC0R,      0x00 },
 	{ R367_IOCFG1,     0x00 },
@@ -133,7 +133,7 @@ struct init_table base_init[] = {
 	{ 0x0000,          0x00 }
 };
 
-struct init_table qam_init[] = {
+static struct init_table qam_init[] = {
 	{ R367_QAM_CTRL_1,                  0x06 },// Orginal 0x04
 	{ R367_QAM_CTRL_2,                  0x03 },
 	{ R367_QAM_IT_STATUS1,              0x2b },
@@ -298,7 +298,7 @@ struct init_table qam_init[] = {
 	{ 0x0000, 0x00 } // EOT
 };
 
-struct init_table ofdm_init[] = {
+static struct init_table ofdm_init[] = {
 	//{R367_OFDM_ID                   ,0x60},
 	//{R367_OFDM_I2CRPT 				,0x22},
 	//{R367_OFDM_TOPCTRL				,0x02},

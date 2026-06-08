@@ -296,7 +296,7 @@ static const struct slookup s1_sn_lookup[] = {
 	{  510,    425  }, /* C/N=51.0dB */
 };
 
-struct slookup s2_sn_lookup[] = {
+static struct slookup s2_sn_lookup[] = {
 	{  -30,  13950  }, /* C/N=-2.5dB */
 	{  -25,  13580  }, /* C/N=-2.5dB */
 	{  -20,  13150  }, /* C/N=-2.0dB */

@@ -448,7 +448,7 @@ struct ddb {
 	u32                    has_ns;
 
 	struct ddb_link        link[DDB_MAX_LINK];
-	unsigned char         *regs;
+	unsigned char __iomem *regs;
 	u32                    regs_len;
 	u32                    port_num;
 	struct ddb_port        port[DDB_MAX_PORT];
