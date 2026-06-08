@@ -63,7 +63,7 @@ static int mci_get_license(int dev, uint8_t *ID, uint8_t *LK, uint8_t *SN)
 	}
 	memcpy(ID, msg.res.get_license.ID, 8);
 	memcpy(LK, msg.res.get_license.LK, 24);
-	memcpy(SN, msg.res.get_license.serial_number, 24);
+	memcpy(SN, msg.res.get_license.serial_number, 17);
 	return 0;
 }
 
