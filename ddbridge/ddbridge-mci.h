@@ -86,31 +86,31 @@
 
 // Receiver defines
 
-#define MCI_CMD_STOP             (0x01)
-#define MCI_CMD_GETSTATUS        (0x02)
-#define MCI_CMD_GETSIGNALINFO    (0x03)
-//#define MCI_CMD_RFPOWER          (0x04)
+#define MCI_CMD_STOP              (0x01)
+#define MCI_CMD_GETSTATUS         (0x02)
+#define MCI_CMD_GETSIGNALINFO     (0x03)
+// #define MCI_CMD_RFPOWER         (0x04)
 
 #define MCI_CMD_SET_INPUT_CONFIG  (0x05)
 
 #define MCI_CMD_GET_CAPABILITIES  (0x0E)
 #define MCI_CMD_GETBIST           (0x0F)
 
-#define MCI_CMD_SEARCH_DVBS     (0x10)
-#define MCI_CMD_SEARCH_ISDBS    (0x11)
-#define MCI_CMD_SEARCH_ISDBS3   (0x12)
+#define MCI_CMD_SEARCH_DVBS       (0x10)
+#define MCI_CMD_SEARCH_ISDBS      (0x11)
+#define MCI_CMD_SEARCH_ISDBS3     (0x12)
 
-#define MCI_CMD_SEARCH_DVBC     (0x20)
-#define MCI_CMD_SEARCH_DVBT     (0x21)
-#define MCI_CMD_SEARCH_DVBT2    (0x22)
-#define MCI_CMD_SEARCH_DVBC2    (0x23)
+#define MCI_CMD_SEARCH_DVBC       (0x20)
+#define MCI_CMD_SEARCH_DVBT       (0x21)
+#define MCI_CMD_SEARCH_DVBT2      (0x22)
+#define MCI_CMD_SEARCH_DVBC2      (0x23)
 
-#define MCI_CMD_SEARCH_ISDBT    (0x24)
-#define MCI_CMD_SEARCH_ISDBC    (0x25)
-#define MCI_CMD_SEARCH_J83B     (0x26)
+#define MCI_CMD_SEARCH_ISDBT      (0x24)
+#define MCI_CMD_SEARCH_ISDBC      (0x25)
+#define MCI_CMD_SEARCH_J83B       (0x26)
 
-#define MCI_CMD_SEARCH_ATSC     (0x27)
-#define MCI_CMD_SEARCH_ATSC3    (0x28)
+#define MCI_CMD_SEARCH_ATSC       (0x27)
+#define MCI_CMD_SEARCH_ATSC3      (0x28)
 
 #define MCI_CMD_GET_IQSYMBOL     (0x30)
 
@@ -149,20 +149,21 @@
 #define MCI_BANDWIDTH_8MHZ       (8)
 #define MCI_BANDWIDTH_10MHZ      (10)
 
-#define MCI_BANDWIDTH_EXTENSION  (0x80)   // currently used only for J83B in Japan
+#define MCI_BANDWIDTH_EXTENSION  (0x80)	// currently used only for J83B in Japan
 
-#define MX_MODE_DVBSX            (2)
-#define MX_MODE_DVBC             (3)
-#define MX_MODE_DVBT             (4)
-#define MX_MODE_DVBT2            (5)
-#define MX_MODE_DVBC2            (6)
-#define MX_MODE_J83B             (7)
-#define MX_MODE_ISDBT            (8)
-#define MX_MODE_ISDBC            (9)
-#define MX_MODE_ISDBS            (10)
-#define MX_MODE_ISDBS3           (11)
-#define MX_MODE_ATSC             (12)
-#define MX_MODE_ATSC3            (13)
+#define MX_MODE_DVBSX         (2)
+#define MX_MODE_DVBC          (3)
+#define MX_MODE_DVBT          (4)
+#define MX_MODE_DVBT2         (5)
+#define MX_MODE_DVBC2         (6)
+#define MX_MODE_J83B          (7)
+#define MX_MODE_ISDBT         (8)
+#define MX_MODE_ISDBC         (9)
+#define MX_MODE_ISDBS         (10)
+#define MX_MODE_ISDBS3        (11)
+#define MX_MODE_ATSC          (12)
+#define MX_MODE_ATSC3         (13)
+
 
 #define MX_SUPPORT_DVBS       ( 1 << 0 )
 #define MX_SUPPORT_DVBS2      ( 1 << 1 )
@@ -187,9 +188,9 @@
 
 #define MX_DVBC_CONSTELLATION_16QAM  (0)
 #define MX_DVBC_CONSTELLATION_32QAM  (1)
-#define MX_DVBC_CONSTELLATION_64QAM  (2)  // also valid for J83B and ISDB-C
+#define MX_DVBC_CONSTELLATION_64QAM  (2)	// also valid for J83B and ISDB-C
 #define MX_DVBC_CONSTELLATION_128QAM (3)
-#define MX_DVBC_CONSTELLATION_256QAM (4)  // also valid for J83B and ISDB-C
+#define MX_DVBC_CONSTELLATION_256QAM (4)	// also valid for J83B and ISDB-C
 
 #define MX_SIGNALINFO_FLAG_CHANGE (0x01)
 #define MX_SIGNALINFO_FLAG_EWS    (0x02)
@@ -227,12 +228,41 @@
 #define MX_DEMOD_WAIT_TS         (6)
 #define MX_DEMOD_C2SCAN          (16)
 
+
+// Output types to be ored to ouput field in cmd header
+//   Notes; 
+//     MX_STANDARD_OUTPUT directly outputs received TS, 
+//     xx_BS_OUTPUT       Byte stream output 
+//     xx_FL_OUTPUT       TLV,ALP embedded in fixed length packets with TS like header 
+//     xx_TS_OUTPUT       TLV,ALP,BBP embedded in MPEG2 compliant transport stream
+//     xx_MXFORMAT_OUTPUT TLV,ALP,BBP with extra packetheader (Start/Error marker, timestamp)
+//     
+//     support depends on card,standard and received data,
+
+#define MX_STANDARD_OUTPUT            (0<<5)
+#define MX_TLV_ALP_FL_OUTPUT          (1<<5)
+
+#define MX_BBP_BS_OUTPUT              (2<<5)
+#define MX_TLV_ALP_BS_OUTPUT          (3<<5)
+
+#if 0
+#define MX_BBP_BBFRAME_TS_OUTPUT      (4<<5)
+#define MX_ALP_TLV_TS_OUTPUT          (5<<5)
+
+#define MX_BBP_MXFORMAT_OUTPUT        (6<<5)
+#define MX_TLV_ALP_MXFORMAT_OUTPUT    (7<<5)
+
+#define SX8_FORCE_BBFRAME_OUTPUT      (MX_BBP_BBFRAME_TS_OUTPUT)
+#else
+#define SX8_FORCE_BBFRAME_OUTPUT      (0x80)
+#endif
+
 // Modulator defines
 
 #define MOD_SETUP_CHANNELS        (0x60)
 #define MOD_SETUP_OUTPUT          (0x61)
 #define MOD_SETUP_STREAM          (0x62)
-//#define MOD_SET_STREAM_CHANNEL    (0x63)
+// #define MOD_SET_STREAM_CHANNEL    (0x63)
 #define MOD_CLOCK_CORRECTION      (0x64)
 
 #define MOD_SETUP_FLAG_FIRST      (0x01)
@@ -319,12 +349,14 @@
 #define MOD_QAM_ISDBC_64          (0x08)
 #define MOD_QAM_ISDBC_256         (0x09)
 
+
 // Sub Commands for MOD_CLOCK_CORRECTION
-// Only available on SDR Modulator (ATV,IQ,IQ2)
+// Only available on SDR Modulator (ATV,IQ,IQ2) 
 #define MOD_CLOCK_COR_RESET         (0)
 #define MOD_CLOCK_COR_SET           (1)
 #define MOD_CLOCK_COR_LEGACY_SET    (120)
 #define MOD_CLOCK_COR_LEGACY_QUERY  (121)
+
 
 struct mod_setup_channels {
 	u8   flags;
@@ -334,6 +366,14 @@ struct mod_setup_channels {
 	u32  frequency;
 	u32  offset;            /* used only when Standard == 0 */
 	u32  bandwidth;         /* used only when Standard == 0 */
+};
+
+struct mod_setup_output {
+	u8   connector;         /* 0 = OFF, 1 = F, 2 = SMA */
+	u8   num_channels;      /* max active channels, determines max power for each channel. */
+	u8   unit;              /* 0 = dBµV, 1 = dBm, */
+	u8   rsvd;
+	s16  channel_power;
 };
 
 struct mod_ofdm_parameter {
@@ -350,6 +390,10 @@ struct mod_qam_parameter {
 	u8   rolloff;           /* Legal values:  12,13,15,18 (only used with MOD_STANDARD_GENERIC) */
 };
 
+struct mod_atv_parameter {
+	uint8_t rsvd2[16];
+};
+
 struct mod_setup_stream {
 	u8   standard;
 	u8   stream_format;
@@ -358,15 +402,8 @@ struct mod_setup_stream {
 	union {
 		struct mod_ofdm_parameter ofdm;
 		struct mod_qam_parameter qam;
+		struct mod_atv_parameter atv;
 	};
-};
-
-struct mod_setup_output {
-	u8   connector;         /* 0 = OFF, 1 = F, 2 = SMA */
-	u8   num_channels;      /* max active channels, determines max power for each channel. */
-	u8   unit;              /* 0 = dBµV, 1 = dBm, */
-	u8   rsvd;
-	s16  channel_power;
 };
 
 struct dvbs2_search {
@@ -586,6 +623,7 @@ struct common_signal_info {
 	u32 ber_rsvd5;          /* reserved to extend PacketCounter to 64 bit */
 	u32 packet_loss_counter;
 	u32 packet_error_counter;
+	u32 current_bitrate;
 };
 
 struct dvbs2_signal_info {
@@ -598,7 +636,7 @@ struct dvbs2_signal_info {
 	s16 channel_power;     /* channel power in dBm x 100 */
 	s16 band_power;        /*/ band power in dBm x 100 */
 	s16 signal_to_noise;   /* SNR in dB x 100, Note: negativ values are valid in DVB-S2 */
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;     /* Counter for packet errors. (set to 0 on Start command) */
 	u32 ber_numerator;     /* Bit error rate: PreRS in DVB-S, PreBCH in DVB-S2X */
 	u32 ber_denominator;
@@ -613,7 +651,7 @@ struct isdbs_signal_info {
 	s16 channel_power;     /* channel power in dBm x 100 */
 	s16 band_power;        /*/ band power in dBm x 100 */
 	s16 signal_to_noise;   /* SNR in dB x 100, Note: negativ values are valid in DVB-S2 */
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;     /* Counter for packet errors. (set to 0 on Start command) */
 	u32 ber_numerator;     /* Bit error rate: PreRS in DVB-S, PreBCH in DVB-S2X */
 	u32 ber_denominator;
@@ -628,15 +666,15 @@ struct dvbc_signal_info {
 	s16 channel_power;     /* channel power in dBm x 100 */
 	s16 band_power;        /* band power in dBm x 100 */
 	s16 signal_to_noise;   /* SNR in dB x 100, Note: negativ values are valid in DVB-S2 */
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;     /* Counter for packet errors. (set to 0 on Start command) */
 	u32 ber_numerator;     /* Bit error rate: PreRS */
 	u32 ber_denominator;
 };
 
 struct dvbt_signal_info {
-	u8  modulation1;        // bit 7..6: Constellation, bit 5..3 Hierachy, bit 2..0 CodeRate High
-	u8  modulation2;        // bit 7..5: CodeRate Low, bit 4..3 Guard Interval, bit 2..1 FFT Mode
+	u8  modulation1;        /* bit 7..6: Constellation, bit 5..3 Hierachy, bit 2..0 CodeRate High */
+	u8  modulation2;        /* bit 7..5: CodeRate Low, bit 4..3 Guard Interval, bit 2..1 FFT Mode */
 	u8  rsvd0;
 	u8  flags;
 	u32 frequency;         /* actual frequency in Hz */
@@ -644,7 +682,7 @@ struct dvbt_signal_info {
 	s16 channel_power;     /* channel power in dBm x 100 */
 	s16 band_power;        /* band power in dBm x 100 */
 	s16 signal_to_noise;   /* SNR in dB x 100, Note: negativ values are valid in DVB-S2 */
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;     /* Counter for packet errors. (set to 0 on Start command) */
 	u32 ber_numerator;     /* Bit error rate: PreRS */
 	u32 ber_denominator;
@@ -658,7 +696,7 @@ struct dvbt2_signal_info {
 	s16 channel_power;      /* channel power in dBm x 100 */
 	s16 band_power;         /* band power in dBm x 100 */
 	s16 signal_to_noise;     /* SNR in dB x 100, Note: negativ values are valid in DVB-S2 */
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;      /* Counter for packet errors. (set to 0 on Start command) */
 	u32 ber_numerator;      /* Bit error rate: PreRS */
 	u32 ber_denominator;
@@ -673,7 +711,7 @@ struct dvbc2_signal_info {
 	s16 channel_power;      // channel power in dBm x 100
 	s16 band_power;         // band power in dBm x 100
 	s16 signal_to_noise; // SNR in dB x 100, Note: negativ values are valid in DVB-S2
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;      // Counter for packet errors. (set to 0 on Start command)
 	u32 ber_numerator;      // Bit error rate: PreBCH
 	u32 ber_denominator;
@@ -688,7 +726,7 @@ struct isdbt_signal_info {
 	s16 channel_power;      // channel power in dBm x 100
 	s16 band_power;         // band power in dBm x 100
 	s16 signal_to_noise;     // SNR in dB x 100, Note: negativ values are valid in DVB-S2
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;      // Counter for packet errors. (set to 0 on Start command)
 	u32 ber_numerator;     // Bit error rate: PreRS Segment A
 	u32 ber_denominator;
@@ -709,7 +747,7 @@ struct j83b_signal_info {
 	s16 channel_power;      // channel power in dBm x 100
 	s16 band_power;         // band power in dBm x 100
 	s16 signal_to_noise;   // SNR in dB x 100, Note: negativ values are valid in DVB-S2
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;      // Counter for packet errors. (set to 0 on Start command)
 	u32 ber_numerator;      // Bit error rate: PreRS in DVB-S, PreBCH in DVB-S2X
 	u32 ber_denominator;
@@ -725,7 +763,7 @@ struct isdbc_signal_info {
 	s16 channel_power;     // channel power in dBm x 100
 	s16 band_power;        // band power in dBm x 100
 	s16 signal_to_noise;   // SNR in dB x 100, Note: negativ values are valid in DVB-S2
-	s16 rsvd2;
+	u16 signal_loss_counter; /* Counts signal losses and automatic retunes */
 	u32 packet_errors;     // Counter for packet errors. (set to 0 on Start command)
 	u32 ber_numerator;     // Bit error rate: PreRS in DVB-S, PreBCH in DVB-S2X
 	u32 ber_denominator;
@@ -772,20 +810,20 @@ struct dvbt_tps_info {
 };
 
 struct dvbt2_l1_pre {
-	u8   Type;
-	u8   BWExtension;
-	u8   S1;
-	u8   S2;
+	u8   type;
+	u8   bw_extension;
+	u8   s1;
+	u8   s2;
 	
-	u8   L1RepetitionFlag;
-	u8   GuardInterval;
-	u8   PAPR;
-	u8   L1Mod;
+	u8   l1_repetition_flag;
+	u8   guard_interval;
+	u8   papr;
+	u8   l1_mod;
 	
-	u8   L1Cod;
-	u8   L1FECType;
+	u8   l1_cod;
+	u8   l1_fec_type;
 	
-	u8   Align1[2];
+	u8   align1[2];
 	
 	u32  L1PostSize;
 	u32  L1PostInfoSize;
@@ -815,36 +853,36 @@ struct dvbt2_l1_pre {
 };
 
 struct dvbt2_l1_post {
-	u16  SubSlicesPerFrame;
-	u8   NumPLP;
-	u8   NumAux;
+	u16  sub_slices_per_frame;
+	u8   num_plp;
+	u8   num_aux;
 	
-	u8   AuxConfigRFU;
-	u8   RFIndex;
-	u8   Align3[2];
+	u8   aux_config_rfu;
+	u8   rf_index;
+	u8   align3[2];
 	
-	u32  Frequency;
-	u8   FEFType;
-	u8   Align4[3];
-	u32  FEFLength;
-	u8   FEFInterval;
+	u32  frequency;
+	u8   fef_type;
+	u8   align4[3];
+	u32  fef_length;
+	u8   fef_interval;
 };
 
 struct dvbt2_l1_post_plp {
-	u8   PLPID;
-	u8   Type;
-	u8   PayloadType;
-	u8   FFFlag;
+	u8   plp_id;
+	u8   type;
+	u8   payload_type;
+	u8   ff_flag;
 	
-	u8   FirstRFIndex;
-	u8   FirstFrameIndex;
-	u8   GroupID;
-	u8   Cod;
+	u8   first_rf_index;
+	u8   first_frame_index;
+	u8   group_id;
+	u8   cod;
 	
-	u8   Mod;
-	u8   Rotation;
-	u8   FECType;  
-	u8   Align1[1];
+	u8   mod;
+	u8   rotation;
+	u8   fec_type;  
+	u8   align1[1];
 	
 	u16  NumBlocksMax;
 	u8   FrameInterval;
@@ -1029,6 +1067,12 @@ struct isdbs_tmcc_info {
 	u8   extension[8];   // 61 bits, right aligned
 };
 
+struct atsc3_plp_list {
+	u8 num_ids;
+	u8 offset;
+	u8 ids[64];
+};
+
 struct sx8_bist {
 	u8  cut;
 	u8  avs_code;
@@ -1175,6 +1219,7 @@ struct mci_result {
 		struct bb_header                bb_header;
 		struct isdbt_tmcc_info          isdbt_tmcc_info;
 		struct isdbs_tmcc_info          isdbs_tmcc_info;
+		struct atsc3_plp_list           atsc3_plp_list;
 		struct sx8_bist                 sx8_bist;
 		struct sx8_packet_filter_status sx8_packet_filter_status;
 		struct extended_status          extended_status;
@@ -1187,77 +1232,6 @@ struct mci_result {
 	u8  version_minor;
 	u8  version_sub;
 };
-
-
-
-/* Helper Macros */
-
-/* DVB-T2 L1-Pre Signalling Data   ( ETSI EN 302 755 V1.4.1 Chapter 7.2.2 ) */
-
-#define L1PRE_TYPE(p)                     ((p)[0] & 0xFF)
-#define L1PRE_BWT_EXT(p)                  ((p)[1] & 0x01)
-#define L1PRE_S1(p)                       ((p)[2] & 0x07)
-#define L1PRE_S2(p)                       ((p)[3] & 0x0F)
-#define L1PRE_L1_REPETITION_FLAG(p)       ((p)[4] & 0x01)
-#define L1PRE_GUARD_INTERVAL(p)           ((p)[5] & 0x07)
-#define L1PRE_PAPR(p)                     ((p)[6] & 0x0F)
-#define L1PRE_L1_MOD(p)                   ((p)[7] & 0x0F)
-#define L1PRE_L1_COD(p)                   ((p)[8] & 0x03)
-#define L1PRE_L1_FEC_TYPE(p)              ((p)[9] & 0x03)
-#define L1PRE_L1_POST_SIZE(p)             (((u32)((p)[10] & 0x03) << 16) | ((u32)(p)[11] << 8) | (p)[12])
-#define L1PRE_L1_POST_INFO_SIZE(p)        (((u32)((p)[13] & 0x03) << 16) | ((u32)(p)[14] << 8) | (p)[15])
-#define L1PRE_PILOT_PATTERN(p)            ((p)[16] & 0x0F)
-#define L1PRE_TX_ID_AVAILABILITY(p)       ((p)[17] & 0xFF)
-#define L1PRE_CELL_ID(p)                  (((u16)(p)[18] << 8) |  (p)[19])
-#define L1PRE_NETWORK_ID(p)               (((u16)(p)[20] << 8) |  (p)[21])
-#define L1PRE_T2_SYSTEM_ID(p)             (((u16)(p)[22] << 8) |  (p)[23])
-#define L1PRE_NUM_T2_FRAMES(p)            ((p)[24] & 0xFF)
-#define L1PRE_NUM_DATA_SYMBOLS(p)         (((u16)((p)[25] & 0x0F) << 8) |  (p)[26])
-#define L1PRE_REGEN_FLAG(p)               ((p)[27] & 0x07)
-#define L1PRE_L1_POST_EXTENSION(p)        ((p)[28] & 0x01)
-#define L1PRE_NUM_RF(p)                   ((p)[29] & 0x07)
-#define L1PRE_CURRENT_RF_IDX(p)           ((p)[30] & 0x07)
-#define L1PRE_T2_VERSION(p)               ((((p)[31] & 0x03) << 2) | (((p)[32] & 0xC0) >> 6))
-#define L1PRE_L1_POST_SCRAMBLED(p)        (((p)[32] & 0x20) >> 5)
-#define L1PRE_T2_BASE_LITE(p)             (((p)[32] & 0x10) >> 4)
-
-
-/* DVB-T2 L1-Post Signalling Data   ( ETSI EN 302 755 V1.4.1 Chapter 7.2.3 ) */
-
-#define L1POST_SUB_SLICES_PER_FRAME(p)     (((u16)(p)[0] & 0x7F) | (p)[1])
-#define L1POST_NUM_PLP(p)                  ((p)[2] & 0xFF)
-#define L1POST_NUM_AUX(p)                  ((p)[3] & 0x0F)
-#define L1POST_AUX_CONFIG_RFU(p)           ((p)[4] & 0xFF)
-#define L1POST_RF_IDX(p)                   ((p)[5] & 0x07)
-#define L1POST_FREQUENCY(p)                (((u32)(p)[6] << 24) | ((u32)(p)[7] << 16) | ((u32)(p)[8] << 8) | (p)[9])
-#define L1POST_FEF_TYPE(p)                 ((p)[10] & 0x0F)
-#define L1POST_FEF_LENGTH(p)               (((u32)(p)[11] << 16) | ((u32)(p)[12] << 8) | (p)[13])
-#define L1POST_FEF_INTERVAL(p)             ((p)[14] & 0xFF)
-
-/* Repeated for each PLP, */
-/* Hardware is restricted to retrieve only values for current data PLP and common PLP */
-
-#define L1POST_PLP_ID(p)                   ((p)[0] & 0xFF)
-#define L1POST_PLP_TYPE(p)                 ((p)[1] & 0x07)
-#define L1POST_PLP_PAYLOAD_TYPE(p)         ((p)[2] & 0x1F)
-#define L1POST_FF_FLAG(p)                  ((p)[3] & 0x01)
-#define L1POST_FIRST_RF_IDX(p)             ((p)[4] & 0x07)
-#define L1POST_FIRST_FRAME_IDX(p)          ((p)[5] & 0xFF)
-#define L1POST_PLP_GROUP_ID(p)             ((p)[6] & 0xFF)
-#define L1POST_PLP_COD(p)                  ((p)[7] & 0x07)
-#define L1POST_PLP_MOD(p)                  ((p)[8] & 0x07)
-#define L1POST_PLP_ROTATION(p)             ((p)[9] & 0x01)
-#define L1POST_PLP_FEC_TYPE(p)             ((p)[10] & 0x03)
-#define L1POST_PLP_NUM_BLOCKS_MAX(p)       (((u16)((p)[11] & 0x03) << 8) | (p)[12])
-#define L1POST_FRAME_INTERVAL(p)           ((p)[13] & 0xFF)
-#define L1POST_TIME_IL_LENGTH(p)           ((p)[14] & 0xFF)
-#define L1POST_TIME_IL_TYPE(p)             ((p)[15] & 0x01)
-#define L1POST_IN_BAND_A_FLAG(p)           ((p)[16] & 0x01)
-#define L1POST_IN_BAND_B_FLAG(p)           (((p)[17] >> 7) & 0x01)
-#define L1POST_RESERVED_1(p)               (((u16)((p)[17] & 0x7F) << 4) | ((p)[18] & 0xF0) >> 4)
-#define L1POST_PLP_MODE(p)                 (((p)[18] >> 2) & 0x03)
-#define L1POST_STATIC_FLAG(p)              (((p)[18] >> 1) & 0x01)
-#define L1POST_STATIC_PADDING_FLAG(p)      (((p)[18] >> 1) & 0x01)
 
 #ifdef __KERNEL__
 
@@ -1282,6 +1256,7 @@ struct mci {
 	struct mci_command   cmd;
 	struct mci_result    result;
 	struct mci_result    signal_info;
+	struct mci_result    l1_info;
 };
 
 struct mci_cfg {
