@@ -1,5 +1,15 @@
 #include <linux/version.h>
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
+#define smp_load_acquire(arg) arg
+#define smp_store_release(p, v) *(p)=v
+#endif
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0))
+#define READ_ONCE(p) ACCESS_ONCE(p)
+#endif
+
+
 #if (KERNEL_VERSION(3, 8, 0) <= LINUX_VERSION_CODE)
 #define __devexit
 #define __devinit
