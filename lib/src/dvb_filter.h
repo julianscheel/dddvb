@@ -1,3 +1,5 @@
+#include <string.h>
+
 static inline uint16_t seclen(const uint8_t *buf)
 {
 	return 3+((buf[1]&0x0f)<<8)+buf[2];
