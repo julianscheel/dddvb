@@ -1,8 +1,7 @@
 /*
 /* ddflash - Programmer for flash on Digital Devices devices
  *
- * Copyright (C) 2013 Digital Devices GmbH
- *                    Ralph Metzler <rmetzler@digitaldevices.de>
+ * Copyright (C) 2013-2026 Digital Devices GmbH
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
