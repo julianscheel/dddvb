@@ -255,6 +255,15 @@ int ddb_mci_get_info(struct mci *mci)
 	return ddb_mci_cmd(mci, &mci->cmd, &mci->signal_info);
 }
 
+static int ddb_mci_get_l1_info(struct mci *mci, u32 select)
+{
+	memset(&mci->cmd, 0, sizeof(struct mci_command));
+	mci->cmd.command = MX_CMD_GET_L1INFO;
+	mci->cmd.demod = mci->demod;
+	mci->cmd.get_l1_info.select = select;
+	return ddb_mci_cmd(mci, &mci->cmd, &mci->l1_info);
+}
+
 /****************************************************************************/
 /****************************************************************************/
 
@@ -280,6 +289,50 @@ void ddb_mci_proc_info(struct mci *mci, struct dtv_frontend_properties *p)
 		FEC_3_4, FEC_4_5, FEC_5_6, FEC_8_9,
 		FEC_9_10, FEC_NONE, FEC_NONE, FEC_NONE,
 	};
+	const enum fe_modulation modcod2modx[0x40] = {
+		/* 0x80 */
+		0, 0, QPSK, QPSK,
+		QPSK, APSK_8_L, APSK_8_L, PSK_8, 
+		PSK_8, PSK_8, APSK_16_L, APSK_16_L,
+		APSK_16_L, APSK_16, APSK_16, APSK_16_L,
+		/* 0xa0 */
+		APSK_16, APSK_16, APSK_16_L, APSK_16,
+		APSK_16, APSK_16, APSK_16, APSK_32_L,
+		APSK_32, APSK_32, APSK_32, APSK_32,
+		APSK_64_L, APSK_64, APSK_64, APSK_64,
+		/* 0xc0 */
+		APSK_64, APSK_64, APSK_64, APSK_64,
+		APSK_128, APSK_128, APSK_256_L, APSK_256_L,
+		APSK_256_L, APSK_256, APSK_256_L, APSK_256,
+		QPSK, QPSK, QPSK, QPSK,
+		/* 0xe0 */
+		QPSK, QPSK, PSK_8, PSK_8,
+		PSK_8, PSK_8, APSK_16, APSK_16,
+		APSK_16, APSK_16, APSK_16, APSK_32,
+		APSK_32, 0, 0, 0
+	};
+	const enum fe_code_rate modcod2fecx[0x40] = {
+		/* 0x80 */
+		FEC_NONE, FEC_NONE, FEC_13_45, FEC_9_20,
+		FEC_11_20, FEC_5_9, FEC_26_45, FEC_23_36, 
+		FEC_25_36, FEC_13_18, FEC_1_2, FEC_8_15,
+		FEC_5_9, FEC_26_45, FEC_3_5, FEC_3_5,
+		/* 0xa0 */
+		FEC_28_45, FEC_23_36, FEC_2_3, FEC_25_36,
+		FEC_13_18, FEC_7_9, FEC_77_90, FEC_2_3,
+		FEC_NONE, FEC_32_45, FEC_11_15, FEC_7_9,
+		FEC_32_45, FEC_11_15, FEC_NONE, FEC_5_6,
+		/* 0xc0 */
+		FEC_NONE, FEC_4_5, FEC_NONE, FEC_5_6,
+		FEC_3_4, FEC_7_9, FEC_29_45, FEC_2_3,
+		FEC_31_45, FEC_32_45, FEC_11_15, FEC_3_4,
+		FEC_11_45, FEC_4_15, FEC_14_45, FEC_7_15,
+		/* 0xe0 */
+		FEC_8_15, FEC_32_45, FEC_7_15, FEC_8_15,
+		FEC_26_45, FEC_32_45, FEC_7_15, FEC_8_15,
+		FEC_26_45, FEC_3_5, FEC_32_45, FEC_2_3,
+		FEC_32_45, 0, 0, 0
+	};
 	const enum fe_code_rate dvbs_fec_lut[8] = {
 		FEC_1_2, FEC_2_3, FEC_3_4, FEC_5_6,
 		FEC_7_8, FEC_7_8, FEC_NONE, FEC_NONE,
@@ -288,7 +341,26 @@ void ddb_mci_proc_info(struct mci *mci, struct dtv_frontend_properties *p)
 		ROLLOFF_35, ROLLOFF_25, ROLLOFF_20, ROLLOFF_10,
 		ROLLOFF_5, ROLLOFF_15, ROLLOFF_35, ROLLOFF_35
 	};
-
+	const enum fe_modulation dvbt_const[4] = {
+		QPSK, QAM_16, QAM_64, QAM_32
+	};
+	const enum fe_code_rate dvbt_coderate[8] = {
+		FEC_1_2, FEC_2_3, FEC_3_4, FEC_5_6,
+		FEC_7_8, FEC_NONE, FEC_NONE, FEC_NONE
+	};
+	const enum fe_transmit_mode dvbt_mode[4] = {
+		TRANSMISSION_MODE_2K, TRANSMISSION_MODE_8K,
+		TRANSMISSION_MODE_4K, TRANSMISSION_MODE_AUTO, 
+	};
+	const enum fe_modulation dvbt2_mod[8] = {
+		QPSK, QAM_16, QAM_64, QAM_256,
+		0, 0, 0, 0
+	};
+	const enum fe_code_rate dvbt2_cod[8] = {
+		FEC_1_2, FEC_3_5, FEC_2_3, FEC_3_4,
+		FEC_4_5, FEC_5_6, FEC_NONE, FEC_NONE
+	};
+	
 	p->frequency =
 		mci->signal_info.common_signal_info.frequency;
 	p->symbol_rate =
@@ -315,10 +387,9 @@ void ddb_mci_proc_info(struct mci *mci, struct dtv_frontend_properties *p)
 				ro_lut[mci->signal_info.dvbs2_signal_info.roll_off & 7];
 			p->pilot = (pls_code & 1) ? PILOT_ON : PILOT_OFF;
 			if (pls_code & 0x80) {
-				/* no suitable values defined in Linux DVB API yet */
-				/* modcod = (0x7f & pls_code) >> 1; */
-				p->fec_inner = FEC_NONE;
-				p->modulation = 0;
+				modcod = (0x7f & pls_code) >> 1;
+				p->fec_inner = modcod2fecx[modcod];
+				p->modulation = modcod2modx[modcod];
 				if (pls_code >= 250)
 					p->pilot = PILOT_ON;
 			} else {
@@ -340,8 +411,27 @@ void ddb_mci_proc_info(struct mci *mci, struct dtv_frontend_properties *p)
 			mci->signal_info.dvbc_signal_info.constellation + 1;
 		break;
 	case SYS_DVBT:
+		p->modulation =
+			dvbt_const[mci->signal_info.dvbt_signal_info.modulation1 >> 6];
+		p->code_rate_HP =
+			dvbt_coderate[mci->signal_info.dvbt_signal_info.modulation1 & 7];
+		p->code_rate_LP =
+			dvbt_coderate[mci->signal_info.dvbt_signal_info.modulation2 >> 5];
+		p->hierarchy =
+			(mci->signal_info.dvbt_signal_info.modulation1 >> 3) & 3;
+		p->guard_interval =
+			(mci->signal_info.dvbt_signal_info.modulation2 >> 3) & 3;
+		p->transmission_mode =
+			dvbt_mode[(mci->signal_info.dvbt_signal_info.modulation2 >> 1) & 3];
 		break;
 	case SYS_DVBT2:
+		ddb_mci_get_l1_info(mci, MX_L1INFO_SEL_PLPINFO);
+		if (mci->l1_info.dvbt2_plp_info.header.magic != 0x3254)
+			break;
+		p->modulation =
+			dvbt2_mod[mci->l1_info.dvbt2_plp_info.dvbt2_l1_post_plp.mod];
+		p->fec_inner =
+			dvbt2_cod[mci->l1_info.dvbt2_plp_info.dvbt2_l1_post_plp.cod];
 		break;
 	case SYS_DVBC2:
 		break;
