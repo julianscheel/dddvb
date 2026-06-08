@@ -230,7 +230,7 @@ int ddb_mci_get_snr(struct dvb_frontend *fe)
 	p->cnr.len = 1;
 	p->cnr.stat[0].scale = FE_SCALE_DECIBEL;
 	p->cnr.stat[0].svalue =
-		(s64) mci->signal_info.dvbs2_signal_info.signal_to_noise * 10;
+		(s64) mci->signal_info.common_signal_info.signal_to_noise * 10;
 	return 0;
 }
 
@@ -240,7 +240,7 @@ int ddb_mci_get_strength(struct dvb_frontend *fe)
 	struct dtv_frontend_properties *p = &fe->dtv_property_cache;
 	s32 str;
 
-	str = mci->signal_info.dvbs2_signal_info.channel_power * 10;
+	str = mci->signal_info.common_signal_info.channel_power * 10;
 	p->strength.len = 1;
 	p->strength.stat[0].scale = FE_SCALE_DECIBEL;
 	p->strength.stat[0].svalue = str;
@@ -290,9 +290,9 @@ void ddb_mci_proc_info(struct mci *mci, struct dtv_frontend_properties *p)
 	};
 
 	p->frequency =
-		mci->signal_info.dvbs2_signal_info.frequency;
+		mci->signal_info.common_signal_info.frequency;
 	p->symbol_rate =
-		mci->signal_info.dvbs2_signal_info.symbol_rate;
+		mci->signal_info.common_signal_info.symbol_rate;
 	switch (p->delivery_system) {
 	case SYS_DVBS:
 	case SYS_DVBS2:
@@ -355,38 +355,38 @@ void ddb_mci_proc_info(struct mci *mci, struct dtv_frontend_properties *p)
 	p->pre_bit_error.len = 1;
 	p->pre_bit_error.stat[0].scale = FE_SCALE_COUNTER;
 	p->pre_bit_error.stat[0].uvalue =
-		mci->signal_info.dvbs2_signal_info.ber_numerator;
+		mci->signal_info.common_signal_info.ber_numerator;
 
 	p->pre_bit_count.len = 1;
 	p->pre_bit_count.stat[0].scale = FE_SCALE_COUNTER;
 	p->pre_bit_count.stat[0].uvalue =
-		mci->signal_info.dvbs2_signal_info.ber_denominator;
+		mci->signal_info.common_signal_info.ber_denominator;
 
 	p->post_bit_error.len = 1;
 	p->post_bit_error.stat[0].scale = FE_SCALE_COUNTER;
 	p->post_bit_error.stat[0].uvalue =
-		mci->signal_info.dvbs2_signal_info.ber_numerator;
+		mci->signal_info.common_signal_info.ber_numerator;
 
 	p->post_bit_count.len = 1;
 	p->post_bit_count.stat[0].scale = FE_SCALE_COUNTER;
 	p->post_bit_count.stat[0].uvalue =
-		mci->signal_info.dvbs2_signal_info.ber_denominator;
+		mci->signal_info.common_signal_info.ber_denominator;
 
 	p->block_error.len = 1;
 	p->block_error.stat[0].scale = FE_SCALE_COUNTER;
 	p->block_error.stat[0].uvalue =
-		mci->signal_info.dvbs2_signal_info.packet_errors;
+		mci->signal_info.common_signal_info.packet_errors;
 	p->block_count.stat[0].scale = FE_SCALE_NOT_AVAILABLE;
 
 	p->cnr.len = 1;
 	p->cnr.stat[0].scale = FE_SCALE_DECIBEL;
 	p->cnr.stat[0].svalue = (s64)
-		mci->signal_info.dvbs2_signal_info.signal_to_noise * 10;
+		mci->signal_info.common_signal_info.signal_to_noise * 10;
 
 	p->strength.len = 1;
 	p->strength.stat[0].scale = FE_SCALE_DECIBEL;
 	p->strength.stat[0].svalue = (s64)
-		mci->signal_info.dvbs2_signal_info.channel_power * 10;
+		mci->signal_info.common_signal_info.channel_power * 10;
 }
 
 static struct mci_base *match_base(void *key)
