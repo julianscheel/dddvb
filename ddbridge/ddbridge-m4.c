@@ -260,6 +260,7 @@ static int search_t2(struct dvb_frontend *fe)
 	cmd.command = MCI_CMD_SEARCH_DVBT2;
 	switch (p->bandwidth_hz) {
 	case 1700000:
+	case 1712000:
 		cmd.dvbt_search.bandwidth = MCI_BANDWIDTH_1_7MHZ;
 		break;
 	case 5000000:
