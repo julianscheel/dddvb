@@ -552,7 +552,10 @@ int ddb_fe_attach_mci(struct ddb_input *input, u32 type)
 		break;
 	case DDB_TUNER_MCI_M4:
 		fm = 0;
-		dvb->fe = ddb_mx_attach(input, demod, tuner, 0);
+		if (!demod)
+			ddb_mci_cmd_link_simple(link, MCI_CMD_SET_INPUT_CONFIG,
+						0xff, 3);
+		dvb->fe = ddb_mx_attach(input, demod, tuner, delmode & 4);
 		dvb->input = tuner;
 		break;
 	case DDB_TUNER_MCI_M8:
