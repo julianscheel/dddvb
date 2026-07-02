@@ -61,7 +61,7 @@ static int raw_stream;
 module_param(raw_stream, int, 0444);
 MODULE_PARM_DESC(raw_stream, "send data as raw stream to DVB layer");
 
-static int alt_dma = 2;
+static int alt_dma = 1;
 module_param(alt_dma, int, 0444);
 MODULE_PARM_DESC(alt_dma, "use alternative DMA buffer handling");
 
@@ -317,23 +317,18 @@ static void dma_free(struct pci_dev *pdev, struct ddb_dma *dma, int dir)
 		return;
 	for (i = 0; i < dma->num; i++) {
 		if (dma->vbuf[i]) {
-			if (alt_dma == 1) {
+			if (alt_dma) {
 				dma_unmap_single(&pdev->dev, dma->pbuf[i],
 						 dma->size,
 						 dir ? DMA_TO_DEVICE :
 						 DMA_BIDIRECTIONAL);
 				kfree(dma->vbuf[i]);
-			} else if (alt_dma == 2)
-				dma_free_noncoherent(&pdev->dev, dma->size,
-						     dma->vbuf[i],
-						     dma->pbuf[i],
-						     dir ? DMA_TO_DEVICE :
-						     DMA_BIDIRECTIONAL);
-			else
+			} else {
 				dma_free_coherent(&pdev->dev, dma->size,
 						  dma->vbuf[i],
 						  dma->pbuf[i]);
-			dma->vbuf[i] = NULL;
+			}
+			dma->vbuf[i] = 0;
 		}
 	}
 }
@@ -345,7 +340,7 @@ static int dma_alloc(struct pci_dev *pdev, struct ddb_dma *dma, int dir)
 	if (!dma)
 		return 0;
 	for (i = 0; i < dma->num; i++) {
-		if (alt_dma == 1) {
+		if (alt_dma) {
 #if (KERNEL_VERSION(4, 13, 0) > LINUX_VERSION_CODE)
 			dma->vbuf[i] = kzalloc(dma->size, __GFP_REPEAT);
 #else
@@ -360,30 +355,19 @@ static int dma_alloc(struct pci_dev *pdev, struct ddb_dma *dma, int dir)
 						      DMA_BIDIRECTIONAL);
 			if (dma_mapping_error(&pdev->dev, dma->pbuf[i])) {
 				kfree(dma->vbuf[i]);
-				dma->vbuf[i] = NULL;
+				dma->vbuf[i] = 0;
 				return -ENOMEM;
 			}
 		} else {
-			if (alt_dma == 2)
-				dma->vbuf[i] = dma_alloc_noncoherent(
-					&pdev->dev,
-					dma->size,
-					&dma->pbuf[i],
-					dir ? DMA_TO_DEVICE :
-					DMA_BIDIRECTIONAL,
-					GFP_KERNEL | __GFP_ZERO);
-			else
-				dma->vbuf[i] = dma_alloc_coherent(
-					&pdev->dev,
-					dma->size,
-					&dma->pbuf[i],
-					GFP_KERNEL | __GFP_ZERO);
+			dma->vbuf[i] = dma_alloc_coherent(&pdev->dev,
+							  dma->size,
+							  &dma->pbuf[i],
+							  GFP_KERNEL | __GFP_ZERO);
 			if (!dma->vbuf[i])
 				return -ENOMEM;
 		}
 		if (((uintptr_t) dma->vbuf[i] & 0xfff))
-			dev_err(&pdev->dev,
-				"DMA memory at %px not aligned!\n", dma->vbuf[i]);
+			dev_err(&pdev->dev, "DMA memory at %px not aligned!\n", dma->vbuf[i]);
 	}
 	return 0;
 }
@@ -2455,6 +2439,9 @@ static void input_write_dvb(struct ddb_input *input,
 							 dma2->vbuf[dma->cbuf],
 							 dma2->size / 188);
 		}
+		//if (alt_dma)
+		//	dma_sync_single_for_device(dev->dev, dma2->pbuf[dma->cbuf],
+		//				   dma2->size, DMA_FROM_DEVICE);
 		dma->cbuf = (dma->cbuf + 1) % dma2->num;
 		if (ack)
 			ddbwritel(dev, (dma->cbuf << 11),
