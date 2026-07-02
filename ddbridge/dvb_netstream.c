@@ -43,6 +43,9 @@ static ssize_t ns_read(struct file *file, __user char *buf,
 	return 0;
 }
 
+#ifndef __poll_t
+#define __poll_t unsigned int
+#endif
 static __poll_t ns_poll(struct file *file, poll_table *wait)
 {
 	pr_info("%s\n", __func__);
